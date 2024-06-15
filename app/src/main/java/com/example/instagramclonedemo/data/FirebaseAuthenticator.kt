@@ -57,11 +57,13 @@ class FirebaseAuthenticator : Authenticator {
     }
 
     override suspend fun saveUserProfile(createUserDto: CreateUserDto) {
+        val uid = createUserDto.userId ?: throw IllegalArgumentException("UID cannot be null")
         Firebase.firestore.collection(Constants.USERS_COLLECTION)
-            .document(createUserDto.uid)
+            .document(uid)
             .set(createUserDto)
             .await()
     }
+
 
     override suspend fun uploadUserProfile(imageUri: Uri): String {
         val uploadTask = Firebase.storage.reference

@@ -61,7 +61,7 @@ fun CustomFormTextField(
             color = if (darkTheme) FormFieldBorderDark else FormFieldBorderLight,
             shape = RoundedCornerShape(10)
         ),
-        value = value,
+        value = value ?: "",
         onValueChange = onValueChange,
         placeholder = {
             Text(text = hint)

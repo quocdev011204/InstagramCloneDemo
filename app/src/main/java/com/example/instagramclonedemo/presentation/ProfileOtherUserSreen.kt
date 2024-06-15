@@ -1,4 +1,4 @@
-package com.example.instagramclonedemo.screens
+package com.example.instagramclonedemo.presentation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -16,18 +16,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +34,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,42 +55,67 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.PopupProperties
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.instagramclonedemo.R
+import com.example.instagramclonedemo.presentation.viewModel.ProfileOtherUserViewModel
+import com.example.instagramclonedemo.screens.PostsSection
 import com.example.instagramclonedemo.ui.theme.StoryHightlights
 import com.example.instagramclonedemo.ui.theme.TabRowIcons
-import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
-
 
 
 @Composable
-fun ProfileScreen(navController: NavController){
+fun ProfileOtherUserSreen (navController: NavController, userId: String?, viewModel: ProfileOtherUserViewModel = hiltViewModel() ){
+    LaunchedEffect(userId) {
+        if (userId != null) {
+            viewModel.loadUser(userId)
+        }
+    }
+//
+//    val user = viewModel.user
+//
+//    if (user != null) {
+//        Column(
+//            modifier = Modifier.fillMaxSize().padding(16.dp),
+//            horizontalAlignment = Alignment.CenterHorizontally,
+//            verticalArrangement = Arrangement.Center
+//        ) {
+//            Image(
+//                painter = rememberImagePainter(data = user.imageUrl),
+//                contentDescription = null,
+//                modifier = Modifier.size(100.dp),
+//                contentScale = ContentScale.Crop
+//            )
+//            Spacer(modifier = Modifier.height(16.dp))
+//            Text(text = user.username ?: "Unknown User", style = MaterialTheme.typography.h6)
+//        }
+//    } else {
+//        Text(text = "Loading...", style = MaterialTheme.typography.h6, modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center))
+//    }
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopBar(navController = navController, modifier = Modifier)
+            TopBarOtherUser(navController = navController, modifier = Modifier)
         },
         content = { contentPadding ->
-            MainContent(modifier = Modifier.padding(contentPadding))
+            MainContentOtherUser(modifier = Modifier.padding(contentPadding))
         }
     )
-    }
+}
+
 
 @Composable
-fun MainContent(modifier: Modifier) {
+fun MainContentOtherUser(modifier: Modifier) {
     var selectedTabIndex by remember {
         mutableStateOf(0)
     }
     Column(modifier.fillMaxSize()) {
-        ProfileSection()
+        ProfileSectionOtherUser()
         Spacer(modifier = Modifier.height(20.dp))
-        PostTabView( onTabSelected = { index ->
+        PostTabViewOtherUser( onTabSelected = { index ->
             selectedTabIndex = index
         })
         when(selectedTabIndex){
@@ -101,8 +124,74 @@ fun MainContent(modifier: Modifier) {
     }
 }
 
+
 @Composable
-fun PostsSection() {
+fun ProfileSectionOtherUser(modifier: Modifier = Modifier, viewModel: ProfileOtherUserViewModel = hiltViewModel()) {
+    val user = viewModel.user
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+        ) {
+            ImageBuilderOtherUser(
+                image = rememberAsyncImagePainter(model = user?.imageUrl),
+                modifier = modifier
+                    .size(100.dp)
+                    .weight(3f)
+            )
+            com.example.instagramclonedemo.screens.FollowStatusBar(modifier = Modifier.weight(7f))
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        com.example.instagramclonedemo.screens.BioSection(
+            name = user?.fullName ?: "Unknown User",
+            activityLabel = "Education",
+            descriptoion = user?.bio ?: "Unknown User",
+            link = "https://www.facebook.com/thanh.ad.90",
+            followers = buildAnnotatedString {
+                val boldStyle = SpanStyle(
+                    fontWeight = FontWeight.Bold
+                )
+                append("Followed by ")
+                pushStyle(boldStyle)
+                append("Elon Musk")
+                pop()
+                append(", ")
+                pushStyle(boldStyle)
+                append("Bill Gates")
+                pop()
+                append(" and")
+                pushStyle(boldStyle)
+                append(" 27 others")
+            }
+        )
+        Spacer(modifier = Modifier.height(25.dp))
+        ButtonSectionOtherUser(modifier = Modifier.fillMaxWidth())
+        Spacer(modifier = Modifier.height(20.dp))
+        HightlightSectionOtherUser(
+            hightlight = listOf(
+                StoryHightlights(
+                    image = painterResource(id = R.drawable.dog),
+                    title = "2023"
+                ),
+                StoryHightlights(
+                    image = painterResource(id = R.drawable.hello),
+                    title = "2024"
+                ),
+            )
+        )
+
+    }
+}
+
+
+
+
+@Composable
+fun PostsSectionOtherUser() {
     val posts = listOf(
         painterResource(id = R.drawable.allena1),
         painterResource(id = R.drawable.helen),
@@ -126,7 +215,7 @@ fun PostsSection() {
 }
 
 @Composable
-fun PostTabView(
+fun PostTabViewOtherUser(
     modifier: Modifier = Modifier,
     onTabSelected:(selectedIndex: Int) -> Unit
 ) {
@@ -141,113 +230,33 @@ fun PostTabView(
     TabRow(
         selectedTabIndex = selectedTabIndex,
         modifier = modifier
-        ) {
-            tabIcons.forEachIndexed { index, tabRowIcons ->
-                Tab(
-                    selected = index == selectedTabIndex,
-                    onClick = {
-                        selectedTabIndex = index
-                        onTabSelected(index)
-                    },
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = tabRowIcons.icon),
-                            contentDescription = "",
-                            modifier.size(20.dp),
-                            tint = if (selectedTabIndex == index) Color.Black else Color.Gray)
-                    },
-                    selectedContentColor = Color.Black,
-                    unselectedContentColor = Color.Gray
-                )
-            }
-    }
-}
-
-@Composable
-fun ProfileSection(modifier: Modifier = Modifier) {
-    val db = FirebaseFirestore.getInstance()
-    var username by remember { mutableStateOf("") }
-    var fullName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var imageUri by remember { mutableStateOf("") }
-    var bio by remember { mutableStateOf("") }
-
-    db.collection("users").document(FirebaseAuth.getInstance().currentUser!!.uid)
-        .get().addOnCompleteListener { task: Task<DocumentSnapshot?> ->
-            if (task.isSuccessful && task.result != null) {
-                fullName = task.result!!.getString("fullName").toString()
-                email = task.result!!.getString("email").toString()
-                imageUri = task.result!!.getString("imageUrl").toString()
-                username = task.result!!.getString("username").toString()
-                bio = task.result!!.getString("bio").toString()
-                //other stuff
-
-            } else {
-                //deal with error
-            }
-        }
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Spacer(modifier = Modifier.height(6.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-        ) {
-            ImageBuilder(
-                image = rememberAsyncImagePainter(model = imageUri),
-                modifier = modifier
-                    .size(100.dp)
-                    .weight(3f)
+    ) {
+        tabIcons.forEachIndexed { index, tabRowIcons ->
+            Tab(
+                selected = index == selectedTabIndex,
+                onClick = {
+                    selectedTabIndex = index
+                    onTabSelected(index)
+                },
+                icon = {
+                    Icon(
+                        painter = painterResource(id = tabRowIcons.icon),
+                        contentDescription = "",
+                        modifier.size(20.dp),
+                        tint = if (selectedTabIndex == index) Color.Black else Color.Gray)
+                },
+                selectedContentColor = Color.Black,
+                unselectedContentColor = Color.Gray
             )
-            FollowStatusBar(modifier = Modifier.weight(7f))
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        BioSection(
-            name = fullName,
-            activityLabel = "Education",
-            descriptoion = bio,
-            link = "https://www.facebook.com/thanh.ad.90",
-            followers = buildAnnotatedString {
-                val boldStyle = SpanStyle(
-                    fontWeight = FontWeight.Bold
-                )
-                append("Followed by ")
-                pushStyle(boldStyle)
-                append("Elon Musk")
-                pop()
-                append(", ")
-                pushStyle(boldStyle)
-                append("Bill Gates")
-                pop()
-                append(" and")
-                pushStyle(boldStyle)
-                append(" 27 others")
-            }
-        )
-        Spacer(modifier = Modifier.height(25.dp))
-        ButtonSection(modifier = Modifier.fillMaxWidth())
-        Spacer(modifier = Modifier.height(20.dp))
-        HightlightSection(
-            hightlight = listOf(
-                StoryHightlights(
-                    image = painterResource(id = R.drawable.dog),
-                    title = "2023"
-                ),
-                StoryHightlights(
-                    image = painterResource(id = R.drawable.hello),
-                    title = "2024"
-                ),
-            )
-        )
-
     }
 }
 
 
 
+
 @Composable
-fun HightlightSection(hightlight: List<StoryHightlights>, modifier: Modifier = Modifier) {
+fun HightlightSectionOtherUser(hightlight: List<StoryHightlights>, modifier: Modifier = Modifier) {
     LazyRow(modifier.padding(horizontal = 20.dp)){
         items(hightlight.size){
             Column(
@@ -255,7 +264,7 @@ fun HightlightSection(hightlight: List<StoryHightlights>, modifier: Modifier = M
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.padding(end = 15.dp)
             ) {
-                ImageBuilder(image = hightlight[it].image, modifier = Modifier.size(70.dp))
+                ImageBuilderOtherUser(image = hightlight[it].image, modifier = Modifier.size(70.dp))
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(text = hightlight[it].title, fontSize = 12.sp)
             }
@@ -263,36 +272,37 @@ fun HightlightSection(hightlight: List<StoryHightlights>, modifier: Modifier = M
     }
 }
 
+
 @Composable
-fun ButtonSection(modifier: Modifier) {
+fun ButtonSectionOtherUser(modifier: Modifier) {
     val minWidth = 105.dp
     val height = 30.dp
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = modifier.padding(horizontal = 20.dp)
     ) {
-        SampleButton(
+        SampleButtonOtherUser(
             modifier = Modifier
                 .defaultMinSize(minWidth)
                 .height(height),
             text = "Following",
             icon = Icons.Default.KeyboardArrowDown
         )
-        SampleButton(
+        SampleButtonOtherUser(
             modifier = Modifier
                 .defaultMinSize(minWidth)
                 .height(height),
             text = "Message",
             icon = Icons.Default.KeyboardArrowDown
         )
-        SampleButton(
+        SampleButtonOtherUser(
             modifier = Modifier
                 .defaultMinSize(minWidth)
                 .height(height),
             text = "Email",
             icon = Icons.Default.KeyboardArrowDown
         )
-        SampleButton(
+        SampleButtonOtherUser(
             modifier = Modifier
                 .size(height),
             icon = Icons.Default.KeyboardArrowDown
@@ -302,7 +312,7 @@ fun ButtonSection(modifier: Modifier) {
 }
 
 @Composable
-fun SampleButton(modifier: Modifier = Modifier, text: String? = null, icon: ImageVector? = null) {
+fun SampleButtonOtherUser(modifier: Modifier = Modifier, text: String? = null, icon: ImageVector? = null) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -322,7 +332,7 @@ fun SampleButton(modifier: Modifier = Modifier, text: String? = null, icon: Imag
 }
 
 @Composable
-fun BioSection(name: String, activityLabel: String, descriptoion: String, link: String, followers: AnnotatedString) {
+fun BioSectionOtherUser(name: String, activityLabel: String, descriptoion: String, link: String, followers: AnnotatedString) {
     val letterSpacing = 0.5.sp
     val lineHeight = 20.sp
     Column(
@@ -338,21 +348,22 @@ fun BioSection(name: String, activityLabel: String, descriptoion: String, link: 
     }
 }
 
+
 @Composable
-fun FollowStatusBar(modifier: Modifier) {
+fun FollowStatusBarOtherUser(modifier: Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround,
         modifier = modifier
     ) {
-        FollowSectoion(number = " 3", label = "Posts", modifier = Modifier)
-        FollowSectoion(number = " 49K", label = "Follower", modifier = Modifier)
-        FollowSectoion(number = " 13", label = "Following", modifier = Modifier)
+        FollowSectoionOtherUser(number = " 3", label = "Posts", modifier = Modifier)
+        FollowSectoionOtherUser(number = " 49K", label = "Follower", modifier = Modifier)
+        FollowSectoionOtherUser(number = " 13", label = "Following", modifier = Modifier)
     }
 }
 
 @Composable
-fun FollowSectoion(number: String, label: String, modifier: Modifier.Companion) {
+fun FollowSectoionOtherUser(number: String, label: String, modifier: Modifier.Companion) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -365,7 +376,7 @@ fun FollowSectoion(number: String, label: String, modifier: Modifier.Companion) 
 }
 
 @Composable
-fun ImageBuilder(image: Painter, modifier: Modifier) {
+fun ImageBuilderOtherUser(image: Painter, modifier: Modifier) {
 
     Image(
         painter = image,
@@ -375,41 +386,24 @@ fun ImageBuilder(image: Painter, modifier: Modifier) {
             .border(width = 2.dp, color = Color.LightGray, shape = CircleShape)
             .padding(5.dp)
             .clip(CircleShape)
-        )
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(navController: NavController, modifier: Modifier) {
+fun TopBarOtherUser(navController: NavController, modifier: Modifier, viewModel: ProfileOtherUserViewModel = hiltViewModel()) {
+
     var expanded by remember { mutableStateOf(false) }
 
-    val db = FirebaseFirestore.getInstance()
-    var username by remember { mutableStateOf("") }
-    var fullName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var imageUri by remember { mutableStateOf("") }
-
-    db.collection("users").document(FirebaseAuth.getInstance().currentUser!!.uid)
-        .get().addOnCompleteListener { task: Task<DocumentSnapshot?> ->
-            if (task.isSuccessful && task.result != null) {
-                fullName = task.result!!.getString("fullName").toString()
-                email = task.result!!.getString("email").toString()
-                imageUri = task.result!!.getString("imageUrl").toString()
-                username = task.result!!.getString("username").toString()
-                //other stuff
-
-            } else {
-                //deal with error
-            }
-        }
+    val user = viewModel.user
 
     TopAppBar(title = {
         Text(
-            text = username,
-                modifier.padding(start = 20.dp, bottom = 6.dp),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
+            text = user?.username ?: "Unknown User",
+            modifier.padding(start = 20.dp, bottom = 6.dp),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
+        )
     },
         navigationIcon = {
             IconButton(onClick = {
@@ -430,28 +424,8 @@ fun TopBar(navController: NavController, modifier: Modifier) {
                             tint = Color.Black
                         )
                     }
-
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        properties = PopupProperties(focusable = true),
-                        modifier = Modifier.wrapContentSize()
-                    ) {
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            navController.navigate("UpdateProfileScreen")
-                        }) {
-                            Text("Update User")
-                        }
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            navController.navigate("ChangePasswordUserScreen")
-                        }) {
-                            Text("Change password")
-                        }
-                    }
                 }
             }
         }
-        )
+    )
 }

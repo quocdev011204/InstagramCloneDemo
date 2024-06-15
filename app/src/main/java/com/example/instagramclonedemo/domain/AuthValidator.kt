@@ -7,10 +7,10 @@ import java.util.regex.Pattern
 object AuthValidator {
 
     fun validateCreateUserRequest(createUserDto: CreateUserDto): ValidationResult {
-        val username = createUserDto.username
-        val password = createUserDto.password
-        val email = createUserDto.email
-        val fullName = createUserDto.fullName
+        val username = createUserDto.username ?: ""
+        val password = createUserDto.password ?: ""
+        val email = createUserDto.email ?: ""
+        val fullName = createUserDto.fullName ?: ""
 
         if (username.isBlank() && password.isBlank() && email.isBlank() && fullName.isBlank()) {
             return ValidationResult(

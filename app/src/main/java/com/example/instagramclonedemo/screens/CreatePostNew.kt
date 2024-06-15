@@ -2,151 +2,178 @@ package com.example.instagramclonedemo.screens
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.Button
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetState
-import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
-import androidx.compose.material.rememberModalBottomSheetState
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
+import coil.transform.CircleCropTransformation
 import com.example.instagramclonedemo.R
-import com.example.instagramclonedemo.common.components.ImagePickerPermissionChecker
-import com.example.instagramclonedemo.util.SharedRef
+import com.example.instagramclonedemo.data.CreateUserDto
+import com.example.instagramclonedemo.presentation.viewModel.CreatePostNewViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+
+private var currentUser: CreateUserDto? = null
 @ExperimentalFoundationApi
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterialApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun CreatePostNew(){
+fun CreatePostNew(viewModel: CreatePostNewViewModel = hiltViewModel(), onPostCreated: () -> Unit){
 
-    val context = LocalContext.current
-    var post by remember{
-        mutableStateOf("")
+    val db = FirebaseFirestore.getInstance()
+    var username by remember { mutableStateOf("") }
+    var profile by remember { mutableStateOf("") }
+
+    db.collection("users").document(FirebaseAuth.getInstance().currentUser!!.uid)
+        .get().addOnCompleteListener { task: Task<DocumentSnapshot?> ->
+            if (task.isSuccessful && task.result != null) {
+                profile = task.result!!.getString("imageUrl").toString()
+                username = task.result!!.getString("username").toString()
+                //other stuff
+            } else {
+                //deal with error
+            }
+        }
+
+    var content by remember { mutableStateOf(TextFieldValue("")) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var postImageList by remember { mutableStateOf(listOf<Int>()) }
+    var likedBy by remember { mutableStateOf(listOf<CreateUserDto>()) }
+
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        imageUri = uri
     }
 
-    val darkTheme: Boolean = isSystemInDarkTheme()
-    val scaffoldState = rememberScaffoldState()
-    val bottomSheetState =
-        rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
-    val coroutineScope = rememberCoroutineScope()
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
-
-    ConstraintLayout(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)) {
-        val (crossPic, text, logo, userName, editText, attachMedia, replyText, button, imageBox) = createRefs()
-
-        Image(
-            painter = painterResource(id = R.drawable.baseline_close_24),
-            contentDescription = "Close",
-            modifier = Modifier
-                .constrainAs(crossPic) {
-                    top.linkTo(parent.top)
-                    start.linkTo(parent.start)
-                }
-                .clickable {
-
-                }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Image(
+                painter = rememberImagePainter(data = profile, builder = {
+                    transformations(CircleCropTransformation())
+                }),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(end = 8.dp)
             )
-
-        Text(
-            text = "New post",
-            style = TextStyle(
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 24.sp
-            ), modifier = Modifier.constrainAs(text){
-                top.linkTo(crossPic.top)
-                start.linkTo(crossPic.end, margin = 12.dp)
-                bottom.linkTo(crossPic.bottom)
+            Column {
+                Text(text = username, style = MaterialTheme.typography.subtitle1)
+                Text(text = "Public", style = MaterialTheme.typography.subtitle2)
             }
-        )
+        }
 
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Image(
-            painter = rememberAsyncImagePainter(model = SharedRef.getImage(context)),
-            contentDescription = "Close",
+        BasicTextField(
+            value = content,
+            onValueChange = { content = it },
             modifier = Modifier
-                .constrainAs(logo) {
-                    top.linkTo(text.bottom)
-                    start.linkTo(parent.start)
-                }
-                .size(35.dp)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop
-            )
-
-        Text(
-            text = SharedRef.getUserName(context),
-            style = TextStyle(
-                fontSize = 20.sp
-            ), modifier = Modifier.constrainAs(userName){
-                top.linkTo(logo.top)
-                start.linkTo(logo.end, margin = 12.dp)
-                bottom.linkTo(logo.bottom)
-            }
-        )
-
-        BasicTextFieldWithHint(hint = "Create a new post...",
-            value = post,
-            onValueChange = { post = it},
-            modifier = Modifier
-                .constrainAs(editText) {
-                    top.linkTo(userName.bottom)
-                    start.linkTo(userName.start)
-                    end.linkTo(parent.end)
-                }
-                .padding(horizontal = 8.dp, vertical = 8.dp)
                 .fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.width(30.dp))
-        ImageSection(darkTheme, imageUri, coroutineScope, bottomSheetState)
-        ImagePickerPermissionChecker(
-            coroutineScope,
-            bottomSheetState,
-            onCameraLaunchResult = { uri ->
-                imageUri = uri
-            },
-            onGalleryLaunchResult = { uri ->
-                imageUri = uri
+                .height(200.dp)
+                .padding(16.dp)
+                .background(Color.LightGray),
+            textStyle = TextStyle(fontSize = 16.sp),
+            decorationBox = { innerTextField ->
+                if (content.text.isEmpty()) {
+                    Text(
+                        text = "Write something...",
+                        style = TextStyle(color = Color.Gray, fontSize = 16.sp)
+                    )
+                }
+                innerTextField()
             }
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = { launcher.launch("image/*") }) {
+            Text("Select Image/Video")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        imageUri?.let {
+            Image(
+                painter = rememberImagePainter(it),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            viewModel.createPost(
+                content = content.text,
+                mediaUri = imageUri,
+                profile = profile,
+                username = username,
+                postImageList = postImageList,
+                likedBy = likedBy,
+                onSuccess = {
+                    onPostCreated()
+                },
+                onFailure = { e ->
+                    // Handle error
+                    e.printStackTrace()
+                }
+            )
+        }) {
+            Text("Post")
+        }
     }
 
 
@@ -210,9 +237,9 @@ fun ImageSection(
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
-@Preview(showBackground = true)
-@Composable
-fun AddPostView(){
-    CreatePostNew()
-}
+//@OptIn(ExperimentalFoundationApi::class)
+//@Preview(showBackground = true)
+//@Composable
+//fun AddPostView(){
+//    CreatePostNew()
+//}

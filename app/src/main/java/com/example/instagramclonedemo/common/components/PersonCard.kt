@@ -1,0 +1,154 @@
+package com.example.instagramclonedemo.common.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import com.example.instagramclonedemo.R
+import com.example.instagramclonedemo.data.CreateUserDto
+import com.example.instagramclonedemo.presentation.viewModel.FirebaseViewModel
+import com.example.instagramclonedemo.presentation.viewModel.TaskViewModel
+
+@Composable
+fun PersonCard(
+    userData: CreateUserDto,
+    firebaseViewModel: FirebaseViewModel,
+    navController: NavController,
+    taskViewModel: TaskViewModel
+){
+    val ctx = LocalContext.current
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
+        onClick = {
+            firebaseViewModel._chatMessages.value = emptyList()
+            firebaseViewModel.chattingWith = userData
+            firebaseViewModel.startMessageListener()
+            navController.navigate("PersonChat")
+            if(taskViewModel.isForwarding){
+                firebaseViewModel.uploadMediaAndSendMessage(
+                    firebaseViewModel.chattingWith?.userId.toString(),
+                    firebaseViewModel.forwarded?.message.toString(),
+                    null,
+                    context = ctx,
+                )
+                taskViewModel.isForwarding = false
+            }
+        }
+    ) {
+        Row (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(15.dp)
+            ,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ){
+            Box {
+                AsyncImage(
+                    model = userData.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(25.dp))
+                        .size(70.dp)
+                )
+                if(userData.online == true){
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = Color.Green,
+                                shape = CircleShape
+                            )
+                            .size(10.dp)
+                            .align(Alignment.BottomEnd)
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 10.dp)
+            ) {
+                Text(
+                    text = userData.username.toString(),
+                    fontSize = 25.sp,
+                    maxLines = 1,
+                    fontWeight = FontWeight.Bold,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                )
+                if(userData.blocked?.contains(firebaseViewModel.userData?.userId.toString()) == false){
+                    Row (
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ){
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if(userData.latestMessage?.media !=null){
+                                Icon(
+                                    painter = painterResource(
+                                        id = if(userData.latestMessage?.isVideo==true){
+                                            R.drawable.videonotifiericon
+                                        }else if(userData.latestMessage?.isFile == true){
+                                            R.drawable.fileicon
+                                        }else{
+                                            R.drawable.latestimageicon
+                                        }
+                                    ),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = MaterialTheme.colorScheme.secondary
+                                )
+                                Spacer(modifier = Modifier.size(5.dp))
+                            }
+                            if(userData.latestMessage?.message != null){
+                                Text(
+                                    text = userData.latestMessage?.message.toString(),
+                                    color = Color.Gray,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                        if(userData.latestMessage?.time!=null){
+                            Text(
+                                text = taskViewModel.getTime(userData.latestMessage?.time ?:0),
+                                color = Color.Gray,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

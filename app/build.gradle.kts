@@ -1,3 +1,4 @@
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -76,6 +77,9 @@ dependencies {
     implementation("com.google.firebase:firebase-auth:22.3.1")
     implementation("com.google.firebase:firebase-firestore:24.11.1")
     implementation("com.google.firebase:firebase-database:20.3.1")
+    implementation ("com.google.firebase:firebase-messaging:19.0.1")
+    implementation("com.google.firebase:firebase-messaging:23.2.1")
+
     implementation("androidx.media3:media3-common:1.3.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -139,4 +143,16 @@ dependencies {
 
     implementation("androidx.media3:media3-ui:1.3.1")
     implementation("androidx.media3:media3-exoplayer:1.3.1")
+
+    implementation("io.sanghun:compose-video:1.2.0")
+    implementation("androidx.media3:media3-exoplayer:1.1.0") // [Required] androidx.media3 ExoPlayer dependency
+    implementation("androidx.media3:media3-session:1.1.0") // [Required] MediaSession Extension dependency
+    implementation("androidx.media3:media3-ui:1.1.0") // [Required] Base Player UI
+
+    implementation("androidx.media3:media3-exoplayer-dash:1.1.0") // [Optional] If your media item is DASH
+    implementation("androidx.media3:media3-exoplayer-hls:1.1.0")
+
+    implementation("io.coil-kt:coil:2.6.0")
+
+
 }

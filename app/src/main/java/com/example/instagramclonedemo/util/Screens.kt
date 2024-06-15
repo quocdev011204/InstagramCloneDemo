@@ -6,6 +6,11 @@ sealed class Screens(val route: String){
     object RegisterScreen: Screens(route = "SignUpScreen")
     object SingleMessageScreen: Screens(route = "SingleMessageScreen")
     object MessagesListScreenDemo: Screens(route = "MessagesListScreenDemo")
-    object MessagesListScreen: Screens(route = "MessagesListScreen")
+    object ChatScreen: Screens(route = "ChatScreen")
     object NotificationsScreen: Screens(route = "NotificationsScreen")
+    object UpdateProfileScreen: Screens(route = "UpdateProfileScreen")
+
+    object ProfileOtherUserScreen: Screens(route = "ProfileOtherUserScreen")
+
+    object ChangePasswordUserScreen: Screens(route = "ChangePasswordUserScreen")
 }

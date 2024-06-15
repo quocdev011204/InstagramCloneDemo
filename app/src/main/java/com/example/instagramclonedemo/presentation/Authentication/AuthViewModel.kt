@@ -12,11 +12,11 @@ import com.example.instagramclonedemo.domain.AuthValidator
 import com.example.instagramclonedemo.presentation.AuthScreenEvents
 import com.example.instagramclonedemo.presentation.ResultEvents
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FieldValue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -87,6 +87,10 @@ class AuthViewModel @Inject constructor(
         isLoading = true
         // isLoading thành true để biểu thị trạng thái đang xử lý
         try {
+            val username = createUserDto.username ?: throw IllegalArgumentException("Username cannot be null")
+            val email = createUserDto.email ?: throw IllegalArgumentException("Email cannot be null")
+            val password = createUserDto.password ?: throw IllegalArgumentException("Password cannot be null")
+
             val usernameAvailability = authRepository.checkUsernameAvailability(createUserDto.username)
             if (!usernameAvailability) {
                 isLoading = false
@@ -100,10 +104,10 @@ class AuthViewModel @Inject constructor(
                     val imageUrl = authRepository.uploadProfileImage(imageUri)
 
                     val updatedUser = createUserDto.copy(
-                        uid = user.uid,
-                        createdDate = FieldValue.serverTimestamp(),
+                        userId = user.uid,
+                        createdDate = Date(),
                         imageUrl = imageUrl,
-                        password = "",
+                        password = ""
                     )
                     authRepository.saveUserProfile(updatedUser)
                 }
@@ -140,10 +144,5 @@ class AuthViewModel @Inject constructor(
             eventChannel.send(ResultEvents.OnError(e.localizedMessage ?: "Unable to Login User, try again."))
         }
     }
-
-
-    fun getCurrentUser() = firebaseAuth.currentUser
-
-
 
 }

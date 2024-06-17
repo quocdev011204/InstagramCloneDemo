@@ -14,16 +14,20 @@ class ChangePasswordUserViewModel : ViewModel() {
     var newPassword: String = ""
     var confirmPassword: String = ""
 
-    var errorMessage: String? = null
-    var successMessage: String? = null
 
     fun changePassword(onResult: (Boolean, String) -> Unit) {
+        // lambda function với hai tham số
+        // Boolean : thành công hay thất bại
+        // String : thông báo được trả về
         viewModelScope.launch {
+            // Khởi tạo coroutine  trong phạm vi ViewModel để đảm bảo thao tác bất đồng bộ được thực hiện mà không bị huỷ
             val user = auth.currentUser
             if (user != null && oldPassword.isNotEmpty() && newPassword.isNotEmpty() && newPassword == confirmPassword) {
                 val email = user.email
                 if (email != null) {
                     val credential = EmailAuthProvider.getCredential(email, oldPassword)
+                    // Tạo đối tượng AuthCredential sử dụng email và mật khẩu cũ (oldPassword).
+                    //Thực hiện xác thực lại người dùng với đối tượng credential.
                     user.reauthenticate(credential).addOnCompleteListener { reAuthTask ->
                         if (reAuthTask.isSuccessful) {
                             user.updatePassword(newPassword).addOnCompleteListener { updateTask ->

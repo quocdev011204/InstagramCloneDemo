@@ -36,6 +36,7 @@ import androidx.navigation.NavController
 import com.example.instagramclonedemo.common.components.CustomFormTextField
 import com.example.instagramclonedemo.presentation.viewModel.ChangePasswordUserViewModel
 import com.example.instagramclonedemo.ui.theme.AccentColor
+import com.example.instagramclonedemo.updateBottomNavBarVisibility
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -43,12 +44,16 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun ChangePasswordUserScreen(navController: NavController, viewModel: ChangePasswordUserViewModel = hiltViewModel()) {
+
+    updateBottomNavBarVisibility(false)
+    // Cho phép cập nhật giá trị khi trạng thái thay đổi
     var oldPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var showMessage by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
+    // var : có thể thay đổi, val không thể thay đổi
 
     Column(
         modifier = Modifier

@@ -1,6 +1,7 @@
 package com.example.instagramclonedemo.presentation
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -29,56 +29,35 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
-import com.example.instagramclonedemo.BottomNavScreens
 import com.example.instagramclonedemo.common.components.CustomFormTextField
-import com.example.instagramclonedemo.presentation.viewModel.UpdateUserViewModel
-import com.example.instagramclonedemo.ui.theme.AccentColor
+import com.example.instagramclonedemo.presentation.viewModel.ChangeInformationPostViewModel
 import com.example.instagramclonedemo.updateBottomNavBarVisibility
-import com.google.firebase.auth.FirebaseAuth
+
 
 @Composable
-fun UpdateProfileScreen(
+fun ChangeInformationPostScreen(
     navController: NavController,
-    viewModel: UpdateUserViewModel = hiltViewModel()
+    postId: String,
+    viewModel: ChangeInformationPostViewModel = hiltViewModel()
 ) {
     updateBottomNavBarVisibility(false)
 
-    val currentUser = FirebaseAuth.getInstance().currentUser
-    val userId = currentUser?.uid ?: ""
+    val context = LocalContext.current
+    var newContent by remember { mutableStateOf("") }
+    var newImageUrl by remember { mutableStateOf<Uri?>(null) }
 
-    var username by remember { mutableStateOf("") }
-    var fullName by remember { mutableStateOf("") }
-    var imageUrl by remember { mutableStateOf<Uri?>(null) }
-    var bio by remember { mutableStateOf("") }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        imageUrl = uri  // Store the Uri object directly
+        newImageUrl = uri
     }
 
-    val updateProfile = {
-        viewModel.updateUserProfile(
-            userId = userId,
-            username = username,
-            fullName = fullName,
-            imageUrl = imageUrl,
-            bio = bio,
-            onSuccess = {
-                // Navigate to ProfileScreen after success
-                navController.navigate(BottomNavScreens.Profile.route)
-            },
-            onFailure = { e ->
-                // Handle the failure case
-                println("Failed to update profile: ${e.message}")
-            }
-        )
-    }
 
-    // UI for updating user profile
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -95,43 +74,26 @@ fun UpdateProfileScreen(
                 )
             }
             Text(
-                text = "Update your profile",
+                text = "Change Information Your Post",
                 style = MaterialTheme.typography.h5,
                 color = Color.Black,
                 modifier = Modifier.padding(vertical = 10.dp)
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
+
+        // Text field để nhập nội dung mới cho bài viết
         CustomFormTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 10.dp),
-            hint = "Username",
-            value = username,
-            keyboardType = KeyboardType.Text,
-            onValueChange = { username = it },
+            hint = "What's on your mind?",
+            value = newContent,
+            onValueChange = { newContent = it },
         )
+
         Spacer(modifier = Modifier.height(8.dp))
-        CustomFormTextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp),
-            hint = "Full name",
-            value = fullName,
-            keyboardType = KeyboardType.Text,
-            onValueChange = { fullName = it },
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        CustomFormTextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp),
-            hint = "Bio",
-            value = bio,
-            keyboardType = KeyboardType.Text,
-            onValueChange = { bio = it },
-        )
-        Spacer(modifier = Modifier.height(10.dp))
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -140,28 +102,48 @@ fun UpdateProfileScreen(
             Button(
                 onClick = { launcher.launch("image/*") },
             ) {
-                Text("Select Image/Video")
+                Text("Pick Image")
             }
         }
-        imageUrl?.let {
-                Image(
-                    painter = rememberImagePainter(it),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = updateProfile,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            colors = ButtonDefaults.buttonColors(backgroundColor = AccentColor)
-        ) {
-            Text(
-                "Update Profile",
-                color = Color.White
+
+        // Hiển thị ảnh hiện tại của bài viết
+        newImageUrl?.let { imageUrl ->
+            Image(
+                painter = rememberImagePainter(imageUrl),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentScale = ContentScale.Crop
             )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Button để cập nhật thông tin bài viết
+        Button(
+            onClick = {
+                viewModel.content = newContent
+                viewModel.mediaUrl = newImageUrl
+
+                viewModel.updatePost(postId,
+                    onSuccess = {
+                        Toast.makeText(context, "Updated post successfully", Toast.LENGTH_SHORT).show()
+                        navController.popBackStack()
+                    },
+                    onFailure = { exception ->
+                        Toast.makeText(context, "Failed to update post: ${exception.message}", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Update Post")
         }
     }
 }
+
+
+
+
+

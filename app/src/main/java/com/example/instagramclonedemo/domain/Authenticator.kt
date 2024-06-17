@@ -4,7 +4,7 @@ import android.net.Uri
 import com.example.instagramclonedemo.data.CreateUserDto
 import com.google.firebase.auth.FirebaseUser
 
-interface Authenticator {
+interface   Authenticator {
     suspend fun createUserWithEmailAndPassword(email:String , password:String) : FirebaseUser?
 
     suspend fun signInWithEmailAndPassword(email: String , password: String): FirebaseUser?

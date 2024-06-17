@@ -4,14 +4,18 @@ import com.example.instagramclonedemo.data.CreateUserDto
 
 
 data class Post(
+    val postId: String = "",
     val userId: String? = null,
     val content: String? = "",
     val mediaUrl: String? = null,
     val timestamp: Long = 0,
-    val profile: String ="", // Giá trị mặc định của profile
-    val username: String = "", // Giá trị mặc định của userName
-    val postImageList: List<Int> = emptyList(), // Giá trị mặc định của postImageList
-    val likedBy: List<CreateUserDto> = emptyList() // Giá trị mặc định của likedBy
+    val profile: String ="",
+    val username: String = "",
+    val postImageList: List<Int> = emptyList(),
+    val likedBy: List<CreateUserDto> = emptyList(),
+    val comments: List<Comment> = emptyList(),
+    val likesCount: Long = 0L
+
 )
 
 //data class User(

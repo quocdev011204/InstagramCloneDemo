@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.instagramclonedemo.presentation.ChangeInformationPostScreen
 import com.example.instagramclonedemo.presentation.ChangePasswordUserScreen
 import com.example.instagramclonedemo.presentation.LoginScreen
 import com.example.instagramclonedemo.presentation.ProfileOtherUserSreen
@@ -69,6 +70,10 @@ fun InstagramNavGraph(navHostController: NavHostController) {
         }
         composable(route = Screens.ChangePasswordUserScreen.route){
             ChangePasswordUserScreen(navController = navHostController)
+        }
+        composable(route = Screens.ChangeInformationPostScreen.route + "/{postId}") { navBackStackEntry ->
+            val postId = navBackStackEntry.arguments?.getString("postId") ?: ""
+            ChangeInformationPostScreen(navController = navHostController, postId = postId)
         }
     }
 }

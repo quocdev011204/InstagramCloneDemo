@@ -1,5 +1,6 @@
 package com.example.instagramclonedemo.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,18 +23,24 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Divider
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -52,6 +59,7 @@ import com.example.instagramclonedemo.R
 import com.example.instagramclonedemo.data.CreateUserDto
 import com.example.instagramclonedemo.model.Post
 import com.example.instagramclonedemo.model.Stories
+import com.example.instagramclonedemo.presentation.viewModel.CreatePostNewViewModel
 import com.example.instagramclonedemo.presentation.viewModel.HomeViewModel
 import com.example.instagramclonedemo.updateBottomNavBarVisibility
 import com.example.instagramclonedemo.util.Screens
@@ -72,10 +80,9 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
                 .fillMaxWidth()
                 .padding(vertical = 5.dp)
                 .height(2.dp))
-//        PostSection(Modifier.fillMaxWidth(), getPostData())
         LazyColumn {
             items(posts) { post ->
-                PostItem(post)
+                PostItem(post, navController = navController)
             }
         }
     }
@@ -87,23 +94,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalPagerApi::class)
 @Composable
-fun PostItem(post: Post) {
+fun PostItem(post: Post, postViewModel : CreatePostNewViewModel = hiltViewModel(), navController: NavController) {
     val pagerState = rememberPagerState(pageCount = {
         post.postImageList.size
     })
+    val context = LocalContext.current
+    var expanded by remember { mutableStateOf(false) }
     Column(modifier = Modifier
         .fillMaxWidth()
         .padding(bottom = 10.dp)) {
-//        post.mediaUrl?.let {
-//            Image(
-//                painter = rememberImagePainter(it),
-//                contentDescription = null,
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(200.dp)
-//            )
-//        }
-//        post.content?.let { Text(text = it) }
 
         Box(modifier = Modifier
             .fillMaxWidth()
@@ -134,17 +133,52 @@ fun PostItem(post: Post) {
                     )
                 )
             }
-
-            Icon(
-                painter = painterResource(id = R.drawable.more),
-                contentDescription = "More",
+            Box(
                 modifier = Modifier
-                    .size(30.dp)
-                    .padding(end = 10.dp)
                     .align(Alignment.CenterEnd)
-            )
+            ) {
+                IconButton(onClick = { expanded = !expanded }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.more),
+                        contentDescription = "More",
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+
+                // Align DropdownMenu to the start of the parent Box
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.align(Alignment.TopStart)
+                ) {
+                    DropdownMenuItem(onClick = {
+                        postViewModel.deletePost(
+                            postId = post.postId,
+                            onSuccess = {
+                                // Hiển thị Toast khi xóa thành công
+                                Toast.makeText(context, "Deleted post successfully", Toast.LENGTH_SHORT).show()
+                            },
+                            onFailure = { exception ->
+                                // Hiển thị Toast khi xóa thất bại
+                                Toast.makeText(context, "Failed to delete post: ${exception.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                        expanded = false // Đóng DropdownMenu sau khi xử lý xong
+                    }) {
+                        Text("Delete Post")
+                    }
+                    DropdownMenuItem(onClick = {
+                        expanded = false
+                        navController.navigate(route = "ChangeInformationPostScreen/${post.postId}") // Điều hướng với postId
+                    }) {
+                        Text("Edit post")
+                    }
+                }
+            }
 
         }
+
+    }
 
         PostCarousel(post = post)
 
@@ -188,7 +222,6 @@ fun PostItem(post: Post) {
             )
         }
 
-//        LikeSection(post.likedBy)
 
 
         val annotatedString = buildAnnotatedString {
@@ -207,7 +240,6 @@ fun PostItem(post: Post) {
         )
     }
 
-}
 
 
 //@OptIn(ExperimentalFoundationApi::class, ExperimentalPagerApi::class)

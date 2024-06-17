@@ -7,24 +7,21 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,25 +32,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
-import com.example.instagramclonedemo.R
 import com.example.instagramclonedemo.data.CreateUserDto
 import com.example.instagramclonedemo.presentation.viewModel.CreatePostNewViewModel
+import com.example.instagramclonedemo.ui.theme.AccentColor
+import com.example.instagramclonedemo.ui.theme.colorFromHex
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 
 private var currentUser: CreateUserDto? = null
@@ -120,28 +114,30 @@ fun CreatePostNew(viewModel: CreatePostNewViewModel = hiltViewModel(), onPostCre
             onValueChange = { content = it },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(150.dp)
                 .padding(16.dp)
-                .background(Color.LightGray),
+                .clip(RoundedCornerShape(8.dp))
+                .background(color = colorFromHex),
             textStyle = TextStyle(fontSize = 16.sp),
             decorationBox = { innerTextField ->
                 if (content.text.isEmpty()) {
                     Text(
                         text = "Write something...",
-                        style = TextStyle(color = Color.Gray, fontSize = 16.sp)
+                        style = TextStyle(color = Color.Gray, fontSize = 16.sp),
+                        modifier = Modifier.padding(10.dp)
                     )
                 }
                 innerTextField()
             }
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         Button(onClick = { launcher.launch("image/*") }) {
             Text("Select Image/Video")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         imageUri?.let {
             Image(
@@ -152,8 +148,6 @@ fun CreatePostNew(viewModel: CreatePostNewViewModel = hiltViewModel(), onPostCre
                     .height(200.dp)
             )
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
             viewModel.createPost(
@@ -171,75 +165,13 @@ fun CreatePostNew(viewModel: CreatePostNewViewModel = hiltViewModel(), onPostCre
                     e.printStackTrace()
                 }
             )
-        }) {
-            Text("Post")
+        },modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth().padding(15.dp).height(47.dp),
+            colors = ButtonDefaults.buttonColors(backgroundColor = AccentColor)) {
+            Text("Post", color = Color.White)
         }
     }
 
 
 }
 
-@Composable
-fun BasicTextFieldWithHint(hint: String, value: String, onValueChange: (String)-> Unit, modifier: Modifier){
-    Box(modifier = modifier){
-        if(value.isEmpty()){
-            Text(text = hint, color = Color.Gray)
-        }
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            textStyle = TextStyle.Default.copy(color = Color.Black),
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun ImageSection(
-    darkTheme: Boolean,
-    imageUri: Uri?,
-    coroutineScope: CoroutineScope,
-    bottomSheetState: ModalBottomSheetState
-) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .padding(5.dp)
-    ) {
-        if (imageUri == null) {
-            Image(
-                painter = painterResource(id = R.drawable.baseline_attachment_24),
-                contentDescription = null,
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .size(30.dp)
-                    .clickable {
-                        coroutineScope.launch {
-                            bottomSheetState.show()
-                        }
-                    }
-            )
-        } else {
-            AsyncImage(
-                model = Uri.parse(imageUri.toString()),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clickable {
-                        coroutineScope.launch {
-                            bottomSheetState.show()
-                        }
-                    }
-            )
-        }
-    }
-}
 
-
-//@OptIn(ExperimentalFoundationApi::class)
-//@Preview(showBackground = true)
-//@Composable
-//fun AddPostView(){
-//    CreatePostNew()
-//}

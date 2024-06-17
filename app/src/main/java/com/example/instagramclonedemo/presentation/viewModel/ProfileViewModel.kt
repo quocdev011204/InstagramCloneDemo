@@ -15,6 +15,7 @@ class UserViewModel : ViewModel() {
     val user: StateFlow<CreateUserDto?> = _user
 
     fun fetchUser(userId: String) {
+        // Tải thông tin người dùng
         viewModelScope.launch {
             firestore.collection("users").document(userId)
                 .get()

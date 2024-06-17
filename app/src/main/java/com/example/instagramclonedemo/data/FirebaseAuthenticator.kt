@@ -17,6 +17,7 @@ class FirebaseAuthenticator : Authenticator {
     ): FirebaseUser? {
         Firebase.auth.createUserWithEmailAndPassword(email, password).await()
         Firebase.auth.currentUser?.sendEmailVerification()?.await()
+        // Gửi email xác thực
         return Firebase.auth.currentUser
     }
 
